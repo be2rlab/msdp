@@ -40,12 +40,14 @@ private:
   moveit_msgs::CollisionObject collision_object;
   std::vector<moveit_msgs::CollisionObject> collision_objects;
 
-  msdp::GoalPoses srv;
+  the_mainest::GoalPoses srv;
   geometry_msgs::Pose p1, p2;
 
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
   moveit::planning_interface::MoveGroupInterface *move_group_interface_ptr;
   const moveit::core::JointModelGroup *joint_model_group;
+
+  ros::ServiceServer get_pnp_poses_srv;
 
 public:
   Add_object_class() : node_handle("~")
@@ -55,7 +57,10 @@ public:
     joint_model_group = move_group_interface_ptr->getCurrentState()->getJointModelGroup(PLANNING_GROUP);
 
     // sub = node_handle.subscribe("/obb_array", 10, &Add_object_class::IvansNodeCallback, this);
-    ros::ServiceClient client = node_handle.serviceClient<msdp::GoalPoses>("GoalPoses");
+    // ros::ServiceClient client = node_handle.serviceClient<the_mainest::GoalPoses>("GoalPoses");
+
+    // get_pnp_poses_src = node_handle.serviceClient<the_mainest::GetPNPPoses>("/get_pnp_poses");
+    get_pnp_poses_srv = node_handle.advertiseService("/get_pnp_poses", &Add_object_class::get_pnp_poses_handler, this);
 
   }
 
@@ -192,181 +197,181 @@ public:
     }
   }
 
-  void IvansNodeCallback(const std_msgs::Float32MultiArray::ConstPtr &msg)
-  {
+  // void IvansNodeCallback(const std_msgs::Float32MultiArray::ConstPtr &msg)
+  // {
 
-    for (int i = 0; i <= 11; i++)
-    {
-      b[i] = msg->data[i];
-      std::cout << b[i] << std::endl;
-    }
+  //   for (int i = 0; i <= 11; i++)
+  //   {
+  //     b[i] = msg->data[i];
+  //     std::cout << b[i] << std::endl;
+  //   }
 
-    ROS_INFO("Data from topic: (%.5f, %.5f, %.5f) -----> : (%.5f, %.5f, %.5f) -----> : (%.5f, %.5f, %.5f)-----> : (%.5f, %.5f, %.5f)",
-             b[0], b[1], b[2],
-             b[3], b[4], b[5],
-             b[6], b[7], b[8],
-             b[9], b[10], b[11]);
+  //   ROS_INFO("Data from topic: (%.5f, %.5f, %.5f) -----> : (%.5f, %.5f, %.5f) -----> : (%.5f, %.5f, %.5f)-----> : (%.5f, %.5f, %.5f)",
+  //            b[0], b[1], b[2],
+  //            b[3], b[4], b[5],
+  //            b[6], b[7], b[8],
+  //            b[9], b[10], b[11]);
 
-    std::string name_obj;
-    name_obj = "box1";
-    //Переменная для центра масс и размеров объекта, который будем добавлять. Первые три числа - размеры объекта, Вторые три - центр масс,
-    //  последние четыре - ориентация объекта в виде кватерниона.
-    double a[9];
+  //   std::string name_obj;
+  //   name_obj = "box1";
+  //   //Переменная для центра масс и размеров объекта, который будем добавлять. Первые три числа - размеры объекта, Вторые три - центр масс,
+  //   //  последние четыре - ориентация объекта в виде кватерниона.
+  //   double a[9];
 
-    tf::TransformListener listener1(ros::Duration(1));
+  //   tf::TransformListener listener1(ros::Duration(1));
 
-    // Размеры
-    a[0] = b[9];
-    a[1] = b[10];
-    a[2] = b[11];
-    // Центр
+  //   // Размеры
+  //   a[0] = b[9];
+  //   a[1] = b[10];
+  //   a[2] = b[11];
+  //   // Центр
 
-    obb_point.header.frame_id = "/camera_color_optical_frame";
-    base_point1.header.frame_id = "/base";
-    //we'll just use the most recent transform available for our simple example
-    obb_point.header.stamp = ros::Time::now();
-
-
-    // //just an arbitrary point in space
-    obb_point.point.x = b[6];
-    obb_point.point.y = b[7];
-    obb_point.point.z = b[8];
-
-    ROS_INFO("now im before transofrm");
-    transformPoint(listener1, base_point1, obb_point);
-    a[3] = base_point1.point.x;
-    a[4] = base_point1.point.y;
-    a[5] = base_point1.point.z;
-    ROS_INFO("now im after transofrm");
-    // // Ориентация
-
-    // geometry_msgs::Pose gripper_pose;
-    // gripper_pose.position.x = base_point1.point.x;
-    // gripper_pose.position.y = base_point1.point.y;
-    // gripper_pose.position.z = base_point1.point.z;
+  //   obb_point.header.frame_id = "/camera_color_optical_frame";
+  //   base_point1.header.frame_id = "/base";
+  //   //we'll just use the most recent transform available for our simple example
+  //   obb_point.header.stamp = ros::Time::now();
 
 
+  //   // //just an arbitrary point in space
+  //   obb_point.point.x = b[6];
+  //   obb_point.point.y = b[7];
+  //   obb_point.point.z = b[8];
 
-    Eigen::Vector3f major_vector(b[0], b[1], b[2]);
-    Eigen::Vector3f middle_vector(b[3], b[4], b[5]);
+  //   ROS_INFO("now im before transofrm");
+  //   transformPoint(listener1, base_point1, obb_point);
+  //   a[3] = base_point1.point.x;
+  //   a[4] = base_point1.point.y;
+  //   a[5] = base_point1.point.z;
+  //   ROS_INFO("now im after transofrm");
+  //   // // Ориентация
 
-    Eigen::Vector3f minor_vector = major_vector.cross(middle_vector);
-
-    Eigen::Matrix3f rot_matrix;
-    rot_matrix.col(0) = major_vector;
-    rot_matrix.col(1) = middle_vector;
-    rot_matrix.col(2) = minor_vector;
-
-    Eigen::Quaternionf quat(rot_matrix);
-
-    obb_orient.header.frame_id = "/camera_color_optical_frame";
-    base_orient.header.frame_id = "/base";
-
-    obb_orient.quaternion.x = quat.x();
-    obb_orient.quaternion.y = quat.y();
-    obb_orient.quaternion.z = quat.z();
-    obb_orient.quaternion.w = quat.w();
-
-    transformQuaternion(listener1, base_orient, obb_orient);
-
-    a[6] = base_orient.quaternion.x;
-    a[7] = base_orient.quaternion.y;
-    a[8] = base_orient.quaternion.z;
-    a[9] = base_orient.quaternion.w;
-    Eigen::Quaternionf quat1;
-    quat1.x() = base_orient.quaternion.x;
-    quat1.y() = base_orient.quaternion.y;
-    quat1.z() = base_orient.quaternion.z;
-    quat1.w() = base_orient.quaternion.w;
-    Eigen::Matrix3f R = quat1.normalized().toRotationMatrix();
-
-    Eigen::Vector3f v1(R.col(0));
-    Eigen::Vector3f v2(R.col(1));
-    Eigen::Vector3f v3(R.col(2));
-
-    double v1_length, v2_length, v3_length;
-    v1_length = sqrt(v1(0)*v1(0) + v1(1)*v1(1));
-    v2_length = sqrt(v2(0)*v2(0) + v2(1)*v2(1));
-    v3_length = sqrt(v3(0)*v3(0) + v3(1)*v3(1));
-
-    int id_max = id_max_vector(v1_length, v2_length, v3_length);
-
-    Eigen::Vector3f max_vector(R.col(id_max));
-
-    // Eigen::Vector3f vectr(0, 1, 0);
-    // Eigen::Vector3f vectr_tr(vectr.transpose());
-    // Eigen::Vector3f first_vector;
-    // first_vector = (max_vector*vectr);
-
-    get_transform(listener1);
-    Eigen::Matrix3f rot_to_tool = qq.normalized().toRotationMatrix();
-    Eigen::Vector3f tool_rot(0, 1, 0);
-    double angle;
-    angle = angleBetweenVectors(max_vector, rot_to_tool*tool_rot);
-    std::cout<<std::endl<<angle<<std::endl;
+  //   // geometry_msgs::Pose gripper_pose;
+  //   // gripper_pose.position.x = base_point1.point.x;
+  //   // gripper_pose.position.y = base_point1.point.y;
+  //   // gripper_pose.position.z = base_point1.point.z;
 
 
-    collision_object.header.frame_id = move_group_interface_ptr->getPlanningFrame();
 
-    moveit_visual_tools::MoveItVisualTools visual_tools("base"); //shoulder_link
-    visual_tools.deleteAllMarkers();
-    visual_tools.loadRemoteControl();
+  //   Eigen::Vector3f major_vector(b[0], b[1], b[2]);
+  //   Eigen::Vector3f middle_vector(b[3], b[4], b[5]);
 
-    add_object(a, name_obj);
-    planning_scene_interface.addCollisionObjects(collision_objects);
-    Eigen::Quaternionf quat2;
-    quat2.x() = 0;
-    quat2.y() = 0;
-    quat2.z() = 1;
-    quat2.w() = angle/M_PI;
-    Eigen::Matrix3f R_last = quat2.normalized().toRotationMatrix();
+  //   Eigen::Vector3f minor_vector = major_vector.cross(middle_vector);
 
-    Eigen::Matrix3f rot_naoborot;
-    rot_naoborot << -1, 0, 0, 0, 1, 0, 0, 0, -1;
-    // rot_naoborot.col(0) = (-1, 0, 0);
-    // rot_naoborot.col(1) = (0, 1, 0);
-    // rot_naoborot.col(2) = (0, 0, -1);
+  //   Eigen::Matrix3f rot_matrix;
+  //   rot_matrix.col(0) = major_vector;
+  //   rot_matrix.col(1) = middle_vector;
+  //   rot_matrix.col(2) = minor_vector;
 
-    Eigen::Matrix3f rot_naoborot2=rot_naoborot*R_last;
-    Eigen::Quaternionf quat3(rot_naoborot2);
+  //   Eigen::Quaternionf quat(rot_matrix);
 
-    p1.position.x = a[3];
-    p1.position.y = a[4];
-    p1.position.z = a[5];
-    // p1.orientation.x = a[6];
-    // p1.orientation.y = a[7];
-    // p1.orientation.z = a[8];
-    // p1.orientation.w = a[9];
-    p1.orientation.x = quat3.x();
-    p1.orientation.y = quat3.y();
-    p1.orientation.z = quat3.z();
-    p1.orientation.w = quat3.w();
+  //   obb_orient.header.frame_id = "/camera_color_optical_frame";
+  //   base_orient.header.frame_id = "/base";
 
-    p2.position.x = -0.3;
-    p2.position.y = -0.3;
-    p2.position.z = 0;
-    p2.orientation.x = 0;
-    p2.orientation.y = 0;
-    p2.orientation.z = 0;
-    p2.orientation.w = 1;
+  //   obb_orient.quaternion.x = quat.x();
+  //   obb_orient.quaternion.y = quat.y();
+  //   obb_orient.quaternion.z = quat.z();
+  //   obb_orient.quaternion.w = quat.w();
 
-    ros::ServiceClient client = node_handle.serviceClient<msdp::GoalPoses>("/GoalPoses");
-    srv.request.p1 = p1;
-    srv.request.p2 = p2;
-    if (client.call(srv))
-    {
-      ROS_INFO("Send two grasping points to client");
-    }
-    else
-    {
-      ROS_ERROR("Failed to call service GoalPoses");
-    }
-  }
+  //   transformQuaternion(listener1, base_orient, obb_orient);
 
-  bool get_pnp_poses_handler(the_mainest::GetPNPPoses::ConstPtr& req, the_mainest::GetPNPPoses::ConstPtr& res) {
+  //   a[6] = base_orient.quaternion.x;
+  //   a[7] = base_orient.quaternion.y;
+  //   a[8] = base_orient.quaternion.z;
+  //   a[9] = base_orient.quaternion.w;
+  //   Eigen::Quaternionf quat1;
+  //   quat1.x() = base_orient.quaternion.x;
+  //   quat1.y() = base_orient.quaternion.y;
+  //   quat1.z() = base_orient.quaternion.z;
+  //   quat1.w() = base_orient.quaternion.w;
+  //   Eigen::Matrix3f R = quat1.normalized().toRotationMatrix();
+
+  //   Eigen::Vector3f v1(R.col(0));
+  //   Eigen::Vector3f v2(R.col(1));
+  //   Eigen::Vector3f v3(R.col(2));
+
+  //   double v1_length, v2_length, v3_length;
+  //   v1_length = sqrt(v1(0)*v1(0) + v1(1)*v1(1));
+  //   v2_length = sqrt(v2(0)*v2(0) + v2(1)*v2(1));
+  //   v3_length = sqrt(v3(0)*v3(0) + v3(1)*v3(1));
+
+  //   int id_max = id_max_vector(v1_length, v2_length, v3_length);
+
+  //   Eigen::Vector3f max_vector(R.col(id_max));
+
+  //   // Eigen::Vector3f vectr(0, 1, 0);
+  //   // Eigen::Vector3f vectr_tr(vectr.transpose());
+  //   // Eigen::Vector3f first_vector;
+  //   // first_vector = (max_vector*vectr);
+
+  //   get_transform(listener1);
+  //   Eigen::Matrix3f rot_to_tool = qq.normalized().toRotationMatrix();
+  //   Eigen::Vector3f tool_rot(0, 1, 0);
+  //   double angle;
+  //   angle = angleBetweenVectors(max_vector, rot_to_tool*tool_rot);
+  //   std::cout<<std::endl<<angle<<std::endl;
+
+
+  //   collision_object.header.frame_id = move_group_interface_ptr->getPlanningFrame();
+
+  //   moveit_visual_tools::MoveItVisualTools visual_tools("base"); //shoulder_link
+  //   visual_tools.deleteAllMarkers();
+  //   visual_tools.loadRemoteControl();
+
+  //   add_object(a, name_obj);
+  //   planning_scene_interface.addCollisionObjects(collision_objects);
+  //   Eigen::Quaternionf quat2;
+  //   quat2.x() = 0;
+  //   quat2.y() = 0;
+  //   quat2.z() = 1;
+  //   quat2.w() = angle/M_PI;
+  //   Eigen::Matrix3f R_last = quat2.normalized().toRotationMatrix();
+
+  //   Eigen::Matrix3f rot_naoborot;
+  //   rot_naoborot << -1, 0, 0, 0, 1, 0, 0, 0, -1;
+  //   // rot_naoborot.col(0) = (-1, 0, 0);
+  //   // rot_naoborot.col(1) = (0, 1, 0);
+  //   // rot_naoborot.col(2) = (0, 0, -1);
+
+  //   Eigen::Matrix3f rot_naoborot2=rot_naoborot*R_last;
+  //   Eigen::Quaternionf quat3(rot_naoborot2);
+
+  //   p1.position.x = a[3];
+  //   p1.position.y = a[4];
+  //   p1.position.z = a[5];
+  //   // p1.orientation.x = a[6];
+  //   // p1.orientation.y = a[7];
+  //   // p1.orientation.z = a[8];
+  //   // p1.orientation.w = a[9];
+  //   p1.orientation.x = quat3.x();
+  //   p1.orientation.y = quat3.y();
+  //   p1.orientation.z = quat3.z();
+  //   p1.orientation.w = quat3.w();
+
+  //   p2.position.x = -0.3;
+  //   p2.position.y = -0.3;
+  //   p2.position.z = 0;
+  //   p2.orientation.x = 0;
+  //   p2.orientation.y = 0;
+  //   p2.orientation.z = 0;
+  //   p2.orientation.w = 1;
+
+  //   ros::ServiceClient client = node_handle.serviceClient<the_mainest::GoalPoses>("/GoalPoses");
+  //   srv.request.p1 = p1;
+  //   srv.request.p2 = p2;
+  //   if (client.call(srv))
+  //   {
+  //     ROS_INFO("Send two grasping points to client");
+  //   }
+  //   else
+  //   {
+  //     ROS_ERROR("Failed to call service GoalPoses");
+  //   }
+  // }
+
+  bool get_pnp_poses_handler(the_mainest::GetPNPPoses::Request& req, the_mainest::GetPNPPoses::Response& res) {
 
     for (int i = 0; i <= 11; i++) {
-      b[i] = req->data[i];
+      b[i] = req.data.data[i];
       std::cout << b[i] << std::endl;
     }
 
@@ -515,8 +520,8 @@ public:
     p2.orientation.z = 0;
     p2.orientation.w = 1;
 
-    res->p1 = p1;
-    res->p2 = p2;
+    res.p1 = p1;
+    res.p2 = p2;
     return true;
   }
 
@@ -530,7 +535,7 @@ int main(int argc, char **argv)
   spinner.start();
 
   Add_object_class obj;
-  ros::waitForShutdown()
+  ros::waitForShutdown();
 
   ros::shutdown();
   return 0;

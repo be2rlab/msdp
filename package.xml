@@ -19,7 +19,6 @@
   <build_depend>rviz_visual_tools</build_depend>
   <build_depend>rosbag</build_depend>
   <build_depend>eigen</build_depend>
-
   <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>tf</build_depend>
@@ -31,14 +30,13 @@
   <build_depend>message_generation</build_depend>
 
   <build_export_depend>eigen</build_export_depend>
-
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
   <build_export_depend>tf</build_export_depend>
   <build_export_depend>tf2_eigen</build_export_depend>
   <build_export_depend>tf2_geometry_msgs</build_export_depend>
   <build_export_depend>tf2_ros</build_export_depend>
-  
+  <build_export_depend>the_mainest</build_export_depend>
   <exec_depend>moveit_core</exec_depend>
   <exec_depend>moveit_commander</exec_depend>
   <exec_depend>moveit_fake_controller_manager</exec_depend>
@@ -47,9 +45,7 @@
   <exec_depend>moveit_visual_tools</exec_depend>
   <exec_depend>rviz_visual_tools</exec_depend>
   <exec_depend>rviz</exec_depend>
-  
   <exec_depend>message_runtime</exec_depend>
-
   <exec_depend>eigen</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>

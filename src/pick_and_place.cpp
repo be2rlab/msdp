@@ -2,8 +2,8 @@
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 
 #include "ros/ros.h"
-#include "the_mainest/GoalPoses.h"
 #include "the_mainest/JSPosition.h"
+#include "the_mainest/GoalPoses.h"
 #include "the_mainest/CartPosition.h"
 
 #include <moveit_msgs/DisplayRobotState.h>
