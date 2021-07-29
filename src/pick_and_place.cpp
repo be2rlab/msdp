@@ -153,14 +153,14 @@ public:
         ROS_INFO("Execution to the grasp postition1 is successful!");
         move_group_interface_ptr->setMaxAccelerationScalingFactor(0.5);
         move_group_interface_ptr->setMaxVelocityScalingFactor(0.5);
-        // at_place = Plan_and_execute_pregrasp_position(p2);
+        at_place = Plan_and_execute_pregrasp_position(p2);
         if (at_place == true)
         {
           at_place = false;
           ROS_INFO("Planning to the pregrasp postition2 is successful!");
           move_group_interface_ptr->setMaxAccelerationScalingFactor(0.2);
           move_group_interface_ptr->setMaxVelocityScalingFactor(0.2);
-          // at_place = Plan_and_execute_grasp_position(p2);
+          at_place = Plan_and_execute_grasp_position(p2);
           if (at_place == true)
           {
             ROS_INFO("Execution to the grasp postition1 is successful!");
