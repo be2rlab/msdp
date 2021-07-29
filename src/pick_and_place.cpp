@@ -50,6 +50,7 @@ public:
     service = n.advertiseService("/GoalPoses", &Pick_and_place_class::is_ok, this);
     js_service = n.advertiseService("/js_position_cmd", &Pick_and_place_class::js_service_handler, this);
     cart_service = n.advertiseService("/cart_position_cmd", &Pick_and_place_class::cart_service_handler, this);
+
   }
 
   ~Pick_and_place_class()
@@ -233,7 +234,7 @@ public:
 
     move_group_interface_ptr->setPoseTarget(req.pose);
     move_group_interface_ptr->allowReplanning(true);
-
+    
     bool success = (move_group_interface_ptr->plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
     bool success2 = (move_group_interface_ptr->execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
     ROS_INFO_NAMED("CART POSITION", "plan (cart space goal) %s", success ? "" : "FAILED");

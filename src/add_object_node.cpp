@@ -20,6 +20,8 @@
 
 #include "the_mainest/GoalPoses.h"
 #include "the_mainest/GetPNPPoses.h"
+#include "the_mainest/AttachObj.h"
+
 
 
 static const std::string PLANNING_GROUP = "manipulator";
@@ -48,6 +50,7 @@ private:
   const moveit::core::JointModelGroup *joint_model_group;
 
   ros::ServiceServer get_pnp_poses_srv;
+  ros::ServiceServer attach_srv;
 
 public:
   Add_object_class() : node_handle("~")
@@ -61,6 +64,8 @@ public:
 
     // get_pnp_poses_src = node_handle.serviceClient<the_mainest::GetPNPPoses>("/get_pnp_poses");
     get_pnp_poses_srv = node_handle.advertiseService("/get_pnp_poses", &Add_object_class::get_pnp_poses_handler, this);
+
+    attach_srv = node_handle.advertiseService("/attach_obj", &Add_object_class::attach_obj_handler, this);
 
   }
 
@@ -367,6 +372,30 @@ public:
   //     ROS_ERROR("Failed to call service GoalPoses");
   //   }
   // }
+
+  
+  bool attach_obj_handler(the_mainest::AttachObj::Request& req, the_mainest::AttachObj::Response& res) {
+
+    moveit_msgs::CollisionObject object_to_attach;
+
+    for (int i = 0; i < collision_objects.size(); ++i) {
+      if (collision_objects[i].id == req.obj_id) {
+        object_to_attach = collision_objects[i];
+      }
+    }
+    
+    if (req.gripper_state == true) {
+      object_to_attach.header.frame_id = move_group_interface_ptr->getEndEffectorLink();
+      ROS_INFO_NAMED("gripper", "Attach the object to the robot");
+      move_group_interface_ptr->attachObject(object_to_attach.id, PLANNING_GROUP);
+    } else {
+      ROS_INFO_NAMED("gripper", "Dettach the object to the robot");
+      move_group_interface_ptr->detachObject(object_to_attach.id);
+    }
+
+    res.status = true;
+    return true;
+  }
 
   bool get_pnp_poses_handler(the_mainest::GetPNPPoses::Request& req, the_mainest::GetPNPPoses::Response& res) {
 
