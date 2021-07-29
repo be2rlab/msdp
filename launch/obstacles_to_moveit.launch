@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <rosparam ns="msdp" command="load" file="$(find msdp)/config/setup.yaml" />
+  <node name="ar_detector_node" pkg="msdp" type="ar_detector_node" respawn="false" output="screen" />
+  <node name="obstacles_to_moveit" pkg="msdp" type="obstacles_to_moveit" respawn="false" output="screen" />
+</launch>
