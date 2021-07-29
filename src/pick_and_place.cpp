@@ -3,8 +3,6 @@
 
 #include "ros/ros.h"
 #include "msdp/GoalPoses.h"
-#include "msdp/JSPosition.h"
-#include "msdp/CartPosition.h"
 
 #include <moveit_msgs/DisplayRobotState.h>
 #include <moveit_msgs/DisplayTrajectory.h>
@@ -28,6 +26,7 @@ static const std::string PLANNING_GROUP = "manipulator";
 class Pick_and_place_class
 {
 private:
+
   ros::NodeHandle n;
   int state;
 
@@ -37,8 +36,6 @@ private:
 
   //namespace rvt = rviz_visual_tools;
   ros::ServiceServer service;
-  ros::ServiceServer js_service;
-  ros::ServiceServer cart_service;
 
 public:
   Pick_and_place_class() : n("~")
@@ -48,8 +45,6 @@ public:
 
     state = 0;
     service = n.advertiseService("/GoalPoses", &Pick_and_place_class::is_ok, this);
-    js_service = n.advertiseService("/js_position_cmd", &Pick_and_place_class::js_service_handler, this);
-    cart_service = n.advertiseService("/cart_position_cmd", &Pick_and_place_class::cart_service_handler, this);
   }
 
   ~Pick_and_place_class()
@@ -61,7 +56,7 @@ public:
   {
     ROS_INFO("plan: point setup");
     geometry_msgs::Pose pre_goal(p);
-    pre_goal.position.z = pre_goal.position.z + 0.5;
+    pre_goal.position.z = pre_goal.position.z + 0.3;
 
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
     move_group_interface_ptr->setPoseTarget(pre_goal);
@@ -98,29 +93,29 @@ public:
 
   bool Plan_and_execute_grasp_position(geometry_msgs::Pose &p)
   {
-    p.position.z = p.position.z + 0.4;
+    p.position.z = p.position.z + 0.2;
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
     move_group_interface_ptr->setPoseTarget(p);
     bool success = (move_group_interface_ptr->plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
     // Если путь спланирован, то выполняем перемещение
     if (success == true)
     {
-      bool success2 = (move_group_interface_ptr->execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-      if (success2 == true)
-      {
-        ROS_INFO("Trajectory executed!");
-        return true;
-      }
-      else
-      {
-        ROS_INFO("Trajectory didn't execute!");
-        return false;
-      }
+    bool success2 = (move_group_interface_ptr->execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+    if (success2 == true)
+    {
+    ROS_INFO("Trajectory executed!");
+    return true;
     }
     else
     {
-      ROS_INFO("Error when trying to execute trajectory. There are no plan!");
-      return false;
+    ROS_INFO("Trajectory didn't execute!");
+    return false;
+    }
+    }
+    else
+    {
+    ROS_INFO("Error when trying to execute trajectory. There are no plan!");
+    return false;
     }
   }
 
@@ -140,111 +135,62 @@ public:
     move_group_interface_ptr->setMaxVelocityScalingFactor(0.5);
 
     at_place = Plan_and_execute_pregrasp_position(p1);
-    if (at_place == true)
-    {
+    // if (at_place == true){
       at_place = false;
       ROS_INFO("Planningto the pregrasp postition1 is successful!");
       move_group_interface_ptr->setMaxAccelerationScalingFactor(0.2);
       move_group_interface_ptr->setMaxVelocityScalingFactor(0.2);
       at_place = Plan_and_execute_grasp_position(p1);
-      if (at_place == true)
-      {
-        at_place = false;
-        ROS_INFO("Execution to the grasp postition1 is successful!");
-        move_group_interface_ptr->setMaxAccelerationScalingFactor(0.5);
-        move_group_interface_ptr->setMaxVelocityScalingFactor(0.5);
-        // at_place = Plan_and_execute_pregrasp_position(p2);
-        if (at_place == true)
-        {
-          at_place = false;
-          ROS_INFO("Planning to the pregrasp postition2 is successful!");
-          move_group_interface_ptr->setMaxAccelerationScalingFactor(0.2);
-          move_group_interface_ptr->setMaxVelocityScalingFactor(0.2);
-          // at_place = Plan_and_execute_grasp_position(p2);
-          if (at_place == true)
-          {
-            ROS_INFO("Execution to the grasp postition1 is successful!");
-            return true;
-          }
-          else
-          {
-            ROS_INFO("Execution to the pregrasp postition2 failed!");
-            return false;
-          }
-        }
-        else
-        {
-          ROS_INFO("Planning to the pregrasp postition2 failed!");
-          return false;
-        }
-      }
-      else
-      {
-        ROS_INFO("Planning to the grasp postition1 failed!");
-        return false;
-      }
-    }
-    else
+    //   if (at_place == true ){
+    //     at_place = false;
+    //     ROS_INFO("Execution to the grasp postition1 is successful!");
+    //     move_group_interface_ptr->setMaxAccelerationScalingFactor(0.5);
+    //     move_group_interface_ptr->setMaxVelocityScalingFactor(0.5);
+    //     at_place = Plan_and_execute_pregrasp_position(p2);
+    //     if (at_place == true)
+    //       {
+    //       at_place = false;
+    //       ROS_INFO("Planning to the pregrasp postition2 is successful!");
+    //       move_group_interface_ptr->setMaxAccelerationScalingFactor(0.2);
+    //       move_group_interface_ptr->setMaxVelocityScalingFactor(0.2);
+    //       at_place = Plan_and_execute_grasp_position(p2);
+    //       if (at_place == true)
+    //         {
+    //         ROS_INFO("Execution to the grasp postition1 is successful!");
+    //         return true;
+    //         }
+    //         else
+    //         {
+    //         ROS_INFO("Execution to the pregrasp postition2 failed!");
+    //         return false;
+    //         }
+    //       }   
+    //       else
+    //       {
+    //       ROS_INFO("Planning to the pregrasp postition2 failed!");
+    //       return false;
+    //       }
+    // }
+    // else
+    // {
+    // ROS_INFO("Planning to the grasp postition1 failed!");
+    // return false;
+    // }
+    // }
+    // else {
+    // ROS_INFO("Planning to the pregrasp postition1 failed!");
+    // return false;
+
+    // }
+  }
+
+  void spin()
+  {
+    ros::Rate R(300);
+    while (n.ok())
     {
-      ROS_INFO("Planning to the pregrasp postition1 failed!");
-      return false;
+      R.sleep();
     }
-  }
-
-
-  bool js_service_handler(msdp::JSPosition::Request &req, msdp::JSPosition::Response &res)
-  {
-    moveit::core::RobotStatePtr current_state = move_group_interface_ptr->getCurrentState();
-
-    std::vector<double> joint_group_positions;
-
-    current_state->copyJointGroupPositions(joint_model_group, joint_group_positions);
-
-    for (int i = 0; i < 6; ++i) {
-      joint_group_positions[i] = req.data[i];
-    }
-
-    move_group_interface_ptr->setJointValueTarget(joint_group_positions);
-
-    move_group_interface_ptr->setMaxVelocityScalingFactor(0.1);
-    move_group_interface_ptr->setMaxAccelerationScalingFactor(0.1);
-    
-    moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-    bool success = (move_group_interface_ptr->plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-    ROS_INFO_NAMED("JS POSITION", "plan (joint space goal) %s", success ? "" : "FAILED");
-    bool success2 = (move_group_interface_ptr->execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-    ROS_INFO_NAMED("JS POSITION", "execute (joint space goal) %s", success ? "" : "FAILED");
-       
-    if ((success == 1) && (success2 == 1)) {
-      res.status = true;
-      return true;
-    }
-    res.status = false;
-    return false;
-  }
-
-  bool cart_service_handler(msdp::CartPosition::Request &req, msdp::CartPosition::Response &res)
-  {
-    move_group_interface_ptr->setPlannerId("RRTConnect");
-    move_group_interface_ptr->setMaxAccelerationScalingFactor(0.5);
-    move_group_interface_ptr->setMaxVelocityScalingFactor(0.5);
-
-    moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-
-    move_group_interface_ptr->setPoseTarget(req.pose);
-    move_group_interface_ptr->allowReplanning(true);
-
-    bool success = (move_group_interface_ptr->plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-    bool success2 = (move_group_interface_ptr->execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-    ROS_INFO_NAMED("CART POSITION", "plan (cart space goal) %s", success ? "" : "FAILED");
-
-    if ((success == 1) && (success2 == 1)) {
-      res.status = true;
-      return true;
-    }
-    res.status = false;
-    return false;
-
   }
 };
 
@@ -255,8 +201,11 @@ int main(int argc, char **argv)
   ros::AsyncSpinner spinner(4);
   spinner.start();
 
+
   Pick_and_place_class go;
+  // go.spin();
   ros::waitForShutdown();
+  // ros::spin();
 
   ros::shutdown();
   return 0;
