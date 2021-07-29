@@ -2,9 +2,9 @@
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 
 #include "ros/ros.h"
-#include "msdp/GoalPoses.h"
-#include "msdp/JSPosition.h"
-#include "msdp/CartPosition.h"
+#include "the_mainest/GoalPoses.h"
+#include "the_mainest/JSPosition.h"
+#include "the_mainest/CartPosition.h"
 
 #include <moveit_msgs/DisplayRobotState.h>
 #include <moveit_msgs/DisplayTrajectory.h>
@@ -124,8 +124,8 @@ public:
     }
   }
 
-  bool is_ok(msdp::GoalPoses::Request &req,
-             msdp::GoalPoses::Response &res)
+  bool is_ok(the_mainest::GoalPoses::Request &req,
+             the_mainest::GoalPoses::Response &res)
   {
     geometry_msgs::Pose p1(req.p1);
     geometry_msgs::Pose p2(req.p2);
@@ -192,7 +192,7 @@ public:
   }
 
 
-  bool js_service_handler(msdp::JSPosition::Request &req, msdp::JSPosition::Response &res)
+  bool js_service_handler(the_mainest::JSPosition::Request &req, the_mainest::JSPosition::Response &res)
   {
     moveit::core::RobotStatePtr current_state = move_group_interface_ptr->getCurrentState();
 
@@ -223,7 +223,7 @@ public:
     return false;
   }
 
-  bool cart_service_handler(msdp::CartPosition::Request &req, msdp::CartPosition::Response &res)
+  bool cart_service_handler(the_mainest::CartPosition::Request &req, the_mainest::CartPosition::Response &res)
   {
     move_group_interface_ptr->setPlannerId("RRTConnect");
     move_group_interface_ptr->setMaxAccelerationScalingFactor(0.5);
