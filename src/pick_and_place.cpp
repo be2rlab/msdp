@@ -226,6 +226,8 @@ public:
 
   bool cart_service_handler(the_mainest::CartPosition::Request &req, the_mainest::CartPosition::Response &res)
   {
+    ROS_INFO("TEST: CART POSITION CALLED");
+
     move_group_interface_ptr->setPlannerId("RRTConnect");
     move_group_interface_ptr->setMaxAccelerationScalingFactor(0.5);
     move_group_interface_ptr->setMaxVelocityScalingFactor(0.5);

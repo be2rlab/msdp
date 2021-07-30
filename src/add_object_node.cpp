@@ -189,9 +189,9 @@ public:
                                 now, ros::Duration(3.0));
       listener.transformQuaternion("/base_link", obj, base);
 
-      ROS_INFO("obj:  (%.5f, %.5f. %.5f) -----> base_link: (%.5f, %.5f, %.5f) at time %.5f",
-               obj.quaternion.x, obj.quaternion.y, obj.quaternion.z,
-               base.quaternion.x, base.quaternion.y, base.quaternion.z, base.header.stamp.toSec());
+      ROS_INFO("Quat: obj:  (%.5f, %.5f, %.5f, %.5f) -----> base_link: (%.5f, %.5f, %.5f, %.5f) at time %.5f",
+               obj.quaternion.x, obj.quaternion.y, obj.quaternion.z, obj.quaternion.w,
+               base.quaternion.x, base.quaternion.y, base.quaternion.z, base.quaternion.w, base.header.stamp.toSec());
     }
     catch (tf::TransformException &ex)
     {
@@ -522,12 +522,20 @@ public:
 
     Eigen::Matrix3f rot_naoborot;
     rot_naoborot << -1, 0, 0, 0, 1, 0, 0, 0, -1;
+
+    Eigen::Matrix3f rot_naoborot_z;
+    rot_naoborot_z << -1, 0, 0, 0, -1, 0, 0, 0, 1;
+
     // rot_naoborot.col(0) = (-1, 0, 0);
     // rot_naoborot.col(1) = (0, 1, 0);
     // rot_naoborot.col(2) = (0, 0, -1);
 
-    Eigen::Matrix3f rot_naoborot2 = rot_naoborot * R_last;
+    Eigen::Matrix3f rot_naoborot2 = rot_naoborot * rot_naoborot_z; //* R_last;
     Eigen::Quaternionf quat3(rot_naoborot2);
+    
+    std::cout << "***********************" << std::endl;
+    std::cout << quat3.x() << " " << quat3.y() << " " << quat3.z() << " " << quat3.w() << std::endl;
+    
 
     p1.position.x = a[3];
     p1.position.y = a[4];
